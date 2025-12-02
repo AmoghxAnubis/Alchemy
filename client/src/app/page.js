@@ -7,11 +7,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
 
+  // Use the Environment variable if available, otherwise fallback to localhost
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+
   useEffect(() => { fetchHistory(); }, []);
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/grimoire");
+      const res = await fetch(`${API_URL}/api/grimoire`);
       const data = await res.json();
       setHistory(data);
     } catch (err) { console.error("System offline..."); }
@@ -24,7 +27,7 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/transmute", {
+      const res = await fetch(`${API_URL}/api/transmute`, {
         method: "POST",
         body: formData,
       });
