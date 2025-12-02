@@ -1,26 +1,19 @@
+# api/transmute.py
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 from PIL import Image
 from pymongo import MongoClient
 import datetime
 import os
+import io
 
 app = Flask(__name__)
 
-# Allow requests from your Vercel frontend
-CORS(app, origins=[
-    "http://localhost:3000",
-    "https://your-app.vercel.app"  # Update after deployment
-])
-
-# --- DATABASE CONNECTION ---
-# Use environment variable for MongoDB URI
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+# MongoDB connection
+MONGODB_URI = os.environ.get('MONGODB_URI')
 client = MongoClient(MONGODB_URI)
 db = client['glitch_wizard']
 collection = db['transmutations']
 
-# --- THE ALCHEMY LOGIC ---
 ASCII_CHARS = ["@", "#", "S", "%", "?", "*", "+", ";", ":", ",", "."]
 
 def resize_image(image, new_width=100):
@@ -46,14 +39,11 @@ def create_ascii_string(image, new_width=100):
     )
     return ascii_image
 
-# --- API ROUTES ---
-
-@app.route('/', methods=['GET'])
-def health_check():
-    return jsonify({"status": "alive", "message": "Glitch Wizard API Online"})
-
 @app.route('/api/transmute', methods=['POST'])
-def transmute():
+def handler(request):
+    if request.method != 'POST':
+        return jsonify({"error": "Method not allowed"}), 405
+        
     if 'file' not in request.files:
         return jsonify({"error": "No image provided"}), 400
     
@@ -74,11 +64,3 @@ def transmute():
     except Exception as e:
         print(e)
         return jsonify({"error": "Transmutation failed"}), 500
-
-@app.route('/api/grimoire', methods=['GET'])
-def get_grimoire():
-    spells = list(collection.find({}, {'_id': 0}).sort("created_at", -1).limit(10))
-    return jsonify(spells)
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
