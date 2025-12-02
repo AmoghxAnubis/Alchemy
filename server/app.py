@@ -3,22 +3,24 @@ from flask_cors import CORS
 from PIL import Image
 from pymongo import MongoClient
 import datetime
-import io
+import os
 
 app = Flask(__name__)
-CORS(app)
+
+# Allow requests from your Vercel frontend
+CORS(app, origins=[
+    "http://localhost:3000",
+    "https://your-app.vercel.app"  # Update after deployment
+])
 
 # --- DATABASE CONNECTION ---
-# 1. Connect to the local MongoDB instance
-client = MongoClient('mongodb://localhost:27017/')
-
-# 2. Create/Select the database "glitch_wizard"
+# Use environment variable for MongoDB URI
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+client = MongoClient(MONGODB_URI)
 db = client['glitch_wizard']
-
-# 3. Create/Select the collection "transmutations"
 collection = db['transmutations']
 
-# --- THE ALCHEMY LOGIC (Same as before) ---
+# --- THE ALCHEMY LOGIC ---
 ASCII_CHARS = ["@", "#", "S", "%", "?", "*", "+", ";", ":", ",", "."]
 
 def resize_image(image, new_width=100):
@@ -48,7 +50,7 @@ def create_ascii_string(image, new_width=100):
 
 @app.route('/', methods=['GET'])
 def health_check():
-    return jsonify({"status": "alive", "message": "Glitch Wizard Connected to DB."})
+    return jsonify({"status": "alive", "message": "Glitch Wizard API Online"})
 
 @app.route('/api/transmute', methods=['POST'])
 def transmute():
@@ -61,12 +63,10 @@ def transmute():
         image = Image.open(file.stream)
         ascii_art = create_ascii_string(image)
         
-        # --- NEW: SAVE TO DATABASE ---
         record = {
             "art": ascii_art,
             "created_at": datetime.datetime.utcnow()
         }
-        # Insert into MongoDB
         collection.insert_one(record)
         
         return jsonify({"art": ascii_art})
@@ -77,13 +77,7 @@ def transmute():
 
 @app.route('/api/grimoire', methods=['GET'])
 def get_grimoire():
-    # --- NEW: FETCH HISTORY ---
-    # 1. Find all records
-    # 2. Exclude '_id' (because ObjectId isn't JSON friendly by default)
-    # 3. Sort by newest first (-1)
-    # 4. Limit to last 10
     spells = list(collection.find({}, {'_id': 0}).sort("created_at", -1).limit(10))
-    
     return jsonify(spells)
 
 if __name__ == '__main__':
