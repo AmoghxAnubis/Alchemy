@@ -1,0 +1,68 @@
+:root {
+  --neon-green: #0aff0a;
+  --dark-bg: #050505;
+  --glass-bg: rgba(20, 30, 20, 0.7);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--dark-bg);
+  color: var(--neon-green);
+  overflow-x: hidden;
+}
+
+/* --- THE CRT SCANLINE OVERLAY --- */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.2)
+  );
+  background-size: 100% 4px;
+  pointer-events: none; /* Let clicks pass through */
+  z-index: 999;
+  animation: scroll 10s linear infinite;
+}
+
+/* --- THE FLICKER EFFECT --- */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.9; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.99; }
+  50% { opacity: 0.95; }
+  100% { opacity: 0.98; }
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+  text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+}
+
+/* --- GLITCH BUTTON ANIMATION --- */
+.glitch-btn {
+  position: relative;
+  overflow: hidden;
+  transition: 0.2s;
+}
+
+.glitch-btn:hover {
+  background-color: var(--neon-green) !important;
+  color: black !important;
+  box-shadow: 0 0 20px var(--neon-green);
+}
+
+/* --- SCROLL ANIMATION FOR SCANLINES --- */
+@keyframes scroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
